@@ -1,0 +1,13 @@
+{{- if .Values.infrastructure.serviceAccount.create -}}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ .Values.infrastructure.serviceAccount.name | quote }}
+  namespace: {{ .Values.global.namespace | quote }}
+  labels:
+    {{- include "Jerney-real-time-blog-website-chart.labels" . | nindent 4 }}
+  {{- if .Values.infrastructure.serviceAccount.roleArn }}
+  annotations:
+    eks.amazonaws.com/role-arn: {{ .Values.infrastructure.serviceAccount.roleArn | quote }}
+  {{- end }}
+{{- end }}

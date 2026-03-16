@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: eso-sa
+  namespace: jerney-ns
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::162499216321:role/access-secret-manager-for-eso-k8s

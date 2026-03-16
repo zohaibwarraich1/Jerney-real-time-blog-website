@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.frontendDeployment.name | quote }}
+  namespace: {{ .Values.global.namespace | quote }}
+  labels:
+    {{- include "Jerney-real-time-blog-website-chart.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.frontendDeployment.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.frontendDeployment.podName | quote }}
+  template:
+    metadata:
+      labels:
+        app: {{ $.Values.frontendDeployment.podName | quote }}
+        {{- include "Jerney-real-time-blog-website-chart.labels" . | nindent 8 }}
+    spec:
+      {{- with .Values.frontendDeployment.spec.securityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: frontend-container
+          image: "{{ .Values.frontendDeployment.spec.image.repository }}:{{ .Values.frontendDeployment.spec.image.tag }}"
+          imagePullPolicy: {{ .Values.frontendDeployment.spec.image.pullPolicy | quote }}
+          {{- with .Values.frontendDeployment.spec.ports }}
+          ports:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+          {{- with .Values.frontendDeployment.spec.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.frontendDeployment.spec.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.frontendDeployment.spec.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.frontendDeployment.spec.volumeMounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.frontendDeployment.spec.volumes }}
+      volumes:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

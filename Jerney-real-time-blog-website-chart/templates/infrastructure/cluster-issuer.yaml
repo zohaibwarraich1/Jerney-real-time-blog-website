@@ -1,0 +1,21 @@
+{{- if .Values.infrastructure.clusterIssuer.enabled -}}
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: {{ .Values.infrastructure.clusterIssuer.name | quote }}
+  labels:
+    {{- include "Jerney-real-time-blog-website-chart.labels" . | nindent 4 }}
+spec:
+  acme:
+    email: {{ .Values.infrastructure.clusterIssuer.email | quote }}
+    server: https://acme-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: letsencrypt-account-key
+    solvers:
+      - dns01:
+          route53:
+            region: {{ .Values.infrastructure.clusterIssuer.region | quote }}
+            {{- if .Values.infrastructure.clusterIssuer.roleArn }}
+            roleArn: {{ .Values.infrastructure.clusterIssuer.roleArn | quote }}
+            {{- end }}
+{{- end }}

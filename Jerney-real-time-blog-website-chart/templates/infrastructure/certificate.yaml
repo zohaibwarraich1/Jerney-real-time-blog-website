@@ -1,0 +1,19 @@
+{{- if .Values.infrastructure.clusterIssuer.enabled -}}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ .Values.infrastructure.certificate.name | quote }}
+  namespace: {{ .Values.global.namespace | quote }}
+  labels:
+    {{- include "Jerney-real-time-blog-website-chart.labels" . | nindent 4 }}
+spec:
+  secretName: {{ .Values.infrastructure.certificate.secretName | quote }}
+  issuerRef:
+    name: {{ .Values.infrastructure.clusterIssuer.name | quote }}
+    kind: ClusterIssuer
+  commonName: {{ .Values.infrastructure.certificate.domain | quote }}
+  {{- with .Values.infrastructure.certificate.dnsNames }}
+  dnsNames:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}

@@ -1,0 +1,29 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: jerney-gateway
+  namespace: jerney-ns
+  annotations:
+    description: "Main entry point for Jerney application traffic"
+spec:
+  gatewayClassName: nginx 
+  
+  listeners:
+    - name: http
+      port: 80
+      protocol: HTTP
+      allowedRoutes:
+        namespaces:
+          from: Same # Allow routes from the same namespace by default
+      
+    # Example for HTTPS (requires a certificate)
+    - name: https
+      port: 443
+      protocol: HTTPS
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: jerney-tls-secret
+      allowedRoutes:
+        namespaces:
+          from: Same

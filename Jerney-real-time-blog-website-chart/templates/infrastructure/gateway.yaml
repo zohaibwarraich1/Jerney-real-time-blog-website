@@ -1,0 +1,28 @@
+{{- if .Values.infrastructure.gateway.enabled -}}
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: {{ .Values.infrastructure.gateway.name | quote }}
+  namespace: {{ .Values.global.namespace | quote }}
+  labels:
+    {{- include "Jerney-real-time-blog-website-chart.labels" . | nindent 4 }}
+spec:
+  gatewayClassName: {{ .Values.infrastructure.gateway.gatewayClassName | quote }}
+  listeners:
+    - name: http
+      port: 80
+      protocol: HTTP
+      allowedRoutes:
+        namespaces:
+          from: Same
+    - name: https
+      port: 443
+      protocol: HTTPS
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: {{ .Values.infrastructure.certificate.secretName | quote }}
+      allowedRoutes:
+        namespaces:
+          from: Same
+{{- end }}

@@ -1,0 +1,45 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: frontend-network-policy
+  namespace: jerney-ns
+spec:
+
+  podSelector:
+    matchLabels:
+      app: frontend-pod
+  
+  policyTypes:
+    - Ingress
+    - Egress
+
+  # Allow incoming traffic from anywhere (Public)
+  ingress:
+    - from:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+      ports:
+        - protocol: TCP
+          port: 80
+
+  # Restrict outgoing traffic (Egress)
+  # Usually databases don't need to initiate connections, but you might need DNS
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: backend-pod
+      ports:
+        - protocol: TCP
+          port: 5000
+          
+    - to:
+        - namespaceSelector: {} # Allow DNS resolutions if needed
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53

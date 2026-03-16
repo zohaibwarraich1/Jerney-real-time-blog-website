@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.backendDeployment.name | quote }}
+  namespace: {{ .Values.global.namespace | quote }}
+  labels:
+    {{- include "Jerney-real-time-blog-website-chart.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.backendDeployment.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.backendDeployment.podName | quote }}
+  template:
+    metadata:
+      labels:
+        app: {{ $.Values.backendDeployment.podName | quote }}
+        {{- include "Jerney-real-time-blog-website-chart.labels" . | nindent 8 }}
+    spec:
+      {{- with .Values.backendDeployment.spec.securityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ .Values.backendDeployment.spec.container.name | quote }}
+          image: "{{ .Values.backendDeployment.spec.container.image.repository }}:{{ .Values.backendDeployment.spec.container.image.tag }}"
+          imagePullPolicy: {{ .Values.backendDeployment.spec.container.image.pullPolicy | quote }}
+          {{- with .Values.backendDeployment.spec.container.ports }}
+          ports:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.backendDeployment.spec.container.envFrom }}
+          envFrom:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.backendDeployment.spec.container.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.backendDeployment.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.backendDeployment.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.backendDeployment.spec.container.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.backendDeployment.spec.container.volumeMounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.backendDeployment.spec.volumes }}
+      volumes:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

@@ -1,0 +1,24 @@
+{{- if .Values.frontendHpa.enabled -}}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ .Values.frontendHpa.name }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "Jerney-real-time-blog-website-chart.labels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ .Values.frontendDeployment.name }}
+  minReplicas: {{ .Values.frontendHpa.minReplicas }}
+  maxReplicas: {{ .Values.frontendHpa.maxReplicas }}
+  {{- with .Values.frontendHpa.metrics }}
+  metrics:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.frontendHpa.behavior }}
+  behavior:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}

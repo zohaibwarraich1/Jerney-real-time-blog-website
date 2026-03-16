@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-deployment
+  namespace: jerney-ns
+  labels:
+    app: jerney-backend
+    environment: prod
+  annotations:
+    description: "Deployment for the Jerney backend Node/Go/Python application"
+spec:
+  replicas: 2 
+  selector:
+    matchLabels:
+      app: backend-pod
+  
+  # Rolling update strategy ensures zero-downtime deployments
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+      
+  template:
+    metadata:
+      labels:
+        app: backend-pod
+      # Optional: To force restart pods if config/secret changes (requires external tools or manual annotation updates)
+      # annotations:
+      #   config-hash: "some-hash-value" 
+    spec:      
+      # Security Context at the pod level
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        
+      containers:
+        - name: backend-container
+          image: zohaibwarraich/jerney-backend:v1 
+          imagePullPolicy: Always # Ensure it pulls the latest image tag during restarts
+          
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+          
+          ports:
+            - name: http
+              containerPort: 5000
+          
+          envFrom:
+            - configMapRef:
+                name: backend-config
+            - secretRef:
+                name: backend-secret
+          
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+              
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            initialDelaySeconds: 15 # Wait 15s before first check
+            periodSeconds: 10       # Check every 10s
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+            
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            initialDelaySeconds: 30 
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          
+          # Optional for Temporary Volume if readOnlyRootFilesystem is true
+          volumeMounts:
+            - name: tmp-dir
+              mountPath: /tmp
+      
+      volumes:
+        - name: tmp-dir
+          emptyDir: {}

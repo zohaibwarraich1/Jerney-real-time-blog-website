@@ -1,0 +1,13 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: jerney-tls-cert
+  namespace: jerney-ns
+spec:
+  secretName: jerney-tls-secret # Cert-manager will create this secret with the certificate
+  issuerRef:
+    name: letsencrypt-route53
+    kind: ClusterIssuer
+  commonName: jerney.zohaibofficial.online 
+  dnsNames:
+    - jerney.zohaibofficial.online

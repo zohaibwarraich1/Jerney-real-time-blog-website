@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Values.databaseStatefulset.name | quote }}
+  namespace: {{ .Values.global.namespace | quote }}
+  labels:
+    {{- include "Jerney-real-time-blog-website-chart.labels" . | nindent 4 }}
+spec:
+  serviceName: {{ .Values.databaseService.name | quote }}
+  replicas: {{ .Values.databaseStatefulset.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.databaseStatefulset.podName | quote }}
+  template:
+    metadata:
+      labels:
+        app: {{ $.Values.databaseStatefulset.podName | quote }}
+        {{- include "Jerney-real-time-blog-website-chart.labels" . | nindent 8 }}
+    spec:
+      {{- with .Values.databaseStatefulset.spec.securityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      initContainers:
+        - name: fix-permissions
+          image: busybox
+          command: ["sh", "-c", "chown -R 999:999 /var/lib/postgresql/data"]
+          securityContext:
+            runAsUser: 0
+          volumeMounts:
+            - name: {{ .Values.databaseStatefulset.persistence.pvcName | quote }}
+              mountPath: /var/lib/postgresql/data
+              subPath: data
+
+      containers:
+        - name: postgres-container
+          image: "{{ .Values.databaseStatefulset.spec.container.image.repository }}:{{ .Values.databaseStatefulset.spec.container.image.tag }}"
+          {{- with .Values.databaseStatefulset.spec.container.envFrom }}
+          envFrom:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.databaseStatefulset.spec.container.ports }}
+          ports:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.databaseStatefulset.spec.container.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.databaseStatefulset.spec.container.volumeMounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.databaseStatefulset.spec.volumes }}
+      volumes:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+  volumeClaimTemplates:
+    - metadata:
+        name: {{ .Values.databaseStatefulset.persistence.pvcName | quote }}
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: {{ .Values.databaseStatefulset.persistence.storageClass | default .Values.infrastructure.storageClass.name | quote }}
+        resources:
+          requests:
+            storage: {{ .Values.databaseStatefulset.persistence.size }}

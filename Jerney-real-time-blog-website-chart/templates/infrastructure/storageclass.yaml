@@ -1,0 +1,20 @@
+{{- if .Values.infrastructure.storageClass.enabled -}}
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: {{ .Values.infrastructure.storageClass.name }}
+  labels:
+    {{- include "Jerney-real-time-blog-website-chart.labels" . | nindent 4 }}
+
+provisioner: {{ .Values.infrastructure.storageClass.provisioner }}
+
+parameters:
+  type: {{ .Values.infrastructure.storageClass.type }}
+
+reclaimPolicy: {{ .Values.infrastructure.storageClass.reclaimPolicy }}
+
+volumeBindingMode: {{ .Values.infrastructure.storageClass.volumeBindingMode }}
+
+allowVolumeExpansion: {{ .Values.infrastructure.storageClass.allowVolumeExpansion }}
+
+{{- end }}

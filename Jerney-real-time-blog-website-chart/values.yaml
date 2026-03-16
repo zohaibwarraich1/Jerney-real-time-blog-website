@@ -1,0 +1,334 @@
+# Global settings
+global:
+  namespace: jerney-ns
+
+################# Frontend Configuration #################
+
+# Deployment
+frontendDeployment:
+  name: frontend-deployment
+  replicas: 2
+  podName: frontend-pod
+  spec: 
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 101 # default user for nginx that is named as nginx
+    image:
+      repository: zohaibwarraich/jerney-frontend
+      tag: "v1"
+      pullPolicy: Always
+    ports:
+      - name: tcp
+        containerPort: 80
+    livenessProbe:
+      httpGet:
+        path: /
+        port: 80
+      initialDelaySeconds: 30
+      periodSeconds: 20
+      timeoutSeconds: 5
+    readinessProbe:
+      httpGet:
+        path: /
+        port: 80
+      initialDelaySeconds: 30
+      periodSeconds: 20
+      timeoutSeconds: 5
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "128Mi"
+      limits:
+        cpu: "200m"
+        memory: "256Mi"
+    volumeMounts:
+      - name: nginx-config-volume
+        mountPath: /etc/nginx/conf.d/default.conf
+        subPath: default.conf
+  volumes:
+    - name: nginx-config-volume
+      configMap:
+        name: frontend-config
+
+# Service
+frontendService:
+  name: frontend-service
+  type: NodePort
+  port: 80
+  nodePort: 30080
+
+# HPA
+frontendHpa:
+  name: frontend-hpa
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 80
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 60
+        - type: Pods
+          value: 2
+          periodSeconds: 60
+      selectPolicy: Max
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 15
+      selectPolicy: Max
+
+# Nginx URL for backend proxy
+frontendNginx:
+  backendUrl: "http://backend-service:5000"
+
+# Config Map
+frontendConfig:
+  name: frontend-config
+
+# Network Policy
+frontendNetworkPolicy:
+  enabled: true
+  name: frontend-network-policy
+
+################# Backend Configuration #################
+
+# Deployment
+backendDeployment:
+  name: "backend-deployment"
+  replicas: 2
+  podName: "backend-pod"
+  livenessProbe:
+    httpGet:
+      path: /api/health
+      port: 5000
+    initialDelaySeconds: 30
+    periodSeconds: 20
+    timeoutSeconds: 5
+  readinessProbe:
+    httpGet:
+      path: /api/health
+      port: 5000
+    initialDelaySeconds: 30
+    periodSeconds: 20
+    timeoutSeconds: 5
+  spec:
+    securityContext:
+      runAsUser: 1000
+      runAsNonRoot: true
+    container:
+      name: backend-container
+      image:
+        repository: zohaibwarraich/jerney-backend
+        tag: "v1"
+        pullPolicy: Always
+      ports:
+        - name: tcp
+          containerPort: 5000
+      envFrom:
+        - configMapRef:
+            name: "backend-config"
+        - secretRef:
+            name: "backend-secret"
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+      resources:
+        requests:
+          cpu: "100m"
+          memory: "128Mi"
+        limits:
+          cpu: "200m"
+          memory: "256Mi"
+      volumeMounts:
+        - name: tmp-dir
+          mountPath: /tmp
+    volumes:
+      - name: tmp-dir
+        emptyDir: {}
+
+# Service
+backendService:
+  name: "backend-service"
+  type: "ClusterIP"
+  port: 5000
+
+# HPA
+backendHpa:
+  enabled: true
+  name: "backend-hpa"
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+  behavior:
+    scaleUp:
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 60
+        - type: Pods
+          value: 4
+          periodSeconds: 60
+      selectPolicy: Max
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 15
+      selectPolicy: Max
+
+# ConfigMap
+backendConfig:
+  name: "backend-config"
+  dbHost: "database-headless-service"
+  dbPort: "5432"
+
+# Network Policy
+backendNetworkPolicy:
+  enabled: true
+  name: "backend-network-policy"
+
+# External Secrets (AWS Secret Manager)
+backendExternalSecret:
+  name: "backend-external-secret"
+  remoteKey: "prod/jerney/backend"
+  spec:
+    refreshInterval: 1h
+    target:
+      name: backend-secret
+
+################# Database Configuration #################
+
+# Statefulset
+databaseStatefulset:
+  name: database-statefulset
+  replicas: 1
+  podName: "database-pods"
+  spec:
+    securityContext:
+      runAsUser: 999
+      runAsGroup: 999
+      fsGroup: 999
+    container:
+      image:
+        repository: postgres
+        tag: "15"
+      envFrom:
+        - secretRef:
+            name: "database-secret"
+      ports:
+        - name: postgres-port
+          containerPort: 5432
+      resources:
+        requests:
+          cpu: "250m"
+          memory: "256Mi"
+        limits:
+          cpu: "500m"
+          memory: "512Mi"
+      volumeMounts:
+        - name: database-pvc
+          mountPath: /var/lib/postgresql/data
+          subPath: data
+        - name: pg-run-sockets
+          mountPath: /var/run/postgresql
+        - name: pg-tmp-files
+          mountPath: /tmp
+    volumes:
+      - name: pg-run-sockets
+        emptyDir: {}
+      - name: pg-tmp-files
+        emptyDir: {}
+      
+  persistence:
+    size: 1Gi
+    storageClass: ebs-sc
+    pvcName: database-pvc
+
+# Service
+databaseService:
+  name: database-headless-service
+  port: 5432
+  portName: postgres
+
+# External Secrets (AWS Secret Manager)
+databaseExternalSecret:
+  name: "database-external-secret"
+  remoteKey: "prod/jerney/database"
+  spec:
+    refreshInterval: 1h
+    target:
+      name: database-secret
+
+# Network Policy
+databaseNetworkPolicy:
+  enabled: true
+  name: "database-network-policy"
+
+################# Infrastructure Configuration #################
+infrastructure:
+  secretStore:
+    enabled: true
+    region: us-east-1
+    name: aws-secretsmanager
+
+  gateway:
+    enabled: true
+    gatewayClassName: nginx
+    name: jerney-gateway
+
+  httpRoutes:
+    enabled: true
+    name: jerney-http-route
+    backendPath: /api
+    frontendPath: /
+    requestRedirect: 
+      name: jerney-http-redirect
+      enabled: true
+
+
+  clusterIssuer:
+    enabled: true
+    name: letsencrypt-route53
+    email: zohaibwarraich1@gmail.com
+    region: us-east-1
+    roleArn: ""
+  
+  certificate:
+    name: jerney-tls-cert
+    secretName: jerney-tls-secret 
+    domain: jerney.zohaibofficial.online
+    dnsNames:
+      - jerney.zohaibofficial.online
+
+  storageClass:
+    enabled: true
+    name: ebs-sc
+    provisioner: ebs.csi.eks.amazonaws.com
+    type: gp3
+    reclaimPolicy: Retain
+    volumeBindingMode: WaitForFirstConsumer
+    allowVolumeExpansion: true
+
+  serviceAccount:
+    create: true
+    name: eso-sa
+    roleArn: ""

@@ -1,0 +1,38 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: frontend-hpa
+  namespace: jerney-ns
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: frontend-deployment
+  minReplicas: 2
+  maxReplicas: 5
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 80
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+        - type: Percent
+          value: 100 # Allow 100% capacity increase per minute
+          periodSeconds: 60
+        - type: Pods
+          value: 2 # Or 4 pods per minute, whichever is higher
+          periodSeconds: 60
+      selectPolicy: Max
+      
+    scaleDown:
+      stabilizationWindowSeconds: 300 # Wait 5 minutes before removing pods after traffic spike ends
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 15 # Can quickly scale down if safe
+      selectPolicy: Max

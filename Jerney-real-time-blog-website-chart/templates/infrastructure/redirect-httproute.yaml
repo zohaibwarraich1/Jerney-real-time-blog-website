@@ -1,0 +1,24 @@
+{{- if .Values.infrastructure.httpRoutes.requestRedirect.enabled -}}
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ .Values.infrastructure.httpRoutes.requestRedirect.name | quote }}
+  namespace: {{ .Values.global.namespace | quote }}
+  labels:
+    {{- include "Jerney-real-time-blog-website-chart.labels" . | nindent 4 }}
+spec:
+  parentRefs:
+    - name: {{ .Values.infrastructure.gateway.name | quote }}
+      sectionName: http
+  {{- with .Values.infrastructure.certificate.dnsNames }}
+  hostnames:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  rules:
+    - filters:
+        - type: RequestRedirect
+          requestRedirect:
+            scheme: https
+            port: 443
+            statusCode: 301
+{{- end }}

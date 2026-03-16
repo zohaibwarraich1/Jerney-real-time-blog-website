@@ -1,0 +1,18 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: jerney-http-redirect
+  namespace: jerney-ns
+spec:
+  parentRefs:
+    - name: jerney-gateway
+      sectionName: http # This should match the listener name in your gateway.yaml for port 80
+  hostnames:
+    - "jerney.zohaibofficial.online"
+  rules:
+    - filters:
+        - type: RequestRedirect
+          requestRedirect:
+            scheme: https
+            port: 443
+            statusCode: 301

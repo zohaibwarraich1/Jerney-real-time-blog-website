@@ -1,0 +1,41 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: jerney-network-policy
+  namespace: jerney-ns
+spec:
+  podSelector:
+    matchLabels:
+      app: backend-pod
+  
+  policyTypes:
+    - Ingress
+    - Egress
+  
+  ingress:
+    - from:
+        - podSelector: # Allow traffic from specific pods in the same namespace
+            matchLabels:
+              app: frontend-pod
+      ports:
+        - protocol: TCP
+          port: 5000 # The port the backend application is listening on
+  
+  egress:
+    - to:
+        - podSelector: # Allow traffic from specific pods in the same namespace
+            matchLabels:
+              app: database-pods
+      ports:
+        - protocol: TCP
+          port: 5432 # The port for a database service (e.g., PostgreSQL)
+    - to:
+        - namespaceSelector: {} # Allow DNS resolutions if needed
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
