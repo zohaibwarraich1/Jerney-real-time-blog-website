@@ -9,7 +9,7 @@ frontendDeployment:
   name: frontend-deployment
   replicas: 2
   podName: frontend-pod
-  spec: 
+  spec:
     securityContext:
       runAsNonRoot: true
       runAsUser: 101 # default user for nginx that is named as nginx
@@ -257,7 +257,7 @@ databaseStatefulset:
         emptyDir: {}
       - name: pg-tmp-files
         emptyDir: {}
-      
+
   persistence:
     size: 1Gi
     storageClass: ebs-sc
@@ -304,7 +304,7 @@ infrastructure:
     name: jerney-http-route
     backendPath: /api
     frontendPath: /
-    requestRedirect: 
+    requestRedirect:
       name: jerney-http-redirect
       enabled: true
 
@@ -315,10 +315,10 @@ infrastructure:
     region: ap-south-1
     # pass arn of r53 role that has access of r53 hosted zones.
     roleArn: ""
-  
+
   certificate:
     name: jerney-tls-cert
-    secretName: jerney-tls-secret 
+    secretName: jerney-tls-secret
     domain: jerney.zohaibofficial.online
     dnsNames:
       - jerney.zohaibofficial.online

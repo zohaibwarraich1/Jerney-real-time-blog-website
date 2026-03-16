@@ -3,8 +3,7 @@ kind: Application
 metadata:
   name: jerney-app
   namespace: argocd
-  finalizers:
-    - resources-finalizer.argocd.argoproj.io/background
+  
 spec:
   project: jerney-project
 
