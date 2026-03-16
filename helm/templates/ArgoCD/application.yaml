@@ -5,7 +5,7 @@ metadata:
   namespace: argocd
   
 spec:
-  project: jerney-project
+  project: argo-project
 
   source:
     repoURL: "https://github.com/zohaibwarraich1/Jerney-real-time-blog-website.git"

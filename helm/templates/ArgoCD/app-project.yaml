@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
-  name: jerney-project
+  name: argo-project
   namespace: argocd # ArgoCD project must be in the argocd namespace
 spec:
   description: "Project for Jerney real-time blog website"
