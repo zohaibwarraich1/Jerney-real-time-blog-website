@@ -313,6 +313,7 @@ infrastructure:
 
   clusterIssuer:
     enabled: true
+    useStaging: true
     name: letsencrypt-route53
     email: zohaibwarraich1@gmail.com
     region: ap-south-1
