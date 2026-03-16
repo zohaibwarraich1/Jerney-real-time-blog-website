@@ -46,6 +46,8 @@ spec:
       kind: ServiceAccount
     - group: "external-secrets.io"
       kind: SecretStore
+    - group: "argoproj.io"
+      kind: AppProject
 
   # Roles for access control within the project
   # roles:
