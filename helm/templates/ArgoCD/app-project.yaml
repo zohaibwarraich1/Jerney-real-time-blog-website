@@ -9,9 +9,9 @@ spec:
     - "https://github.com/zohaibwarraich1/Jerney-real-time-blog-website.git"
   destinations:
     - namespace: {{ .Values.global.namespace | quote }}
-      server: https://kubernetes.default.svc
+      server: {{ .Values.infrastructure.EKSclusterArn | quote }}
     - namespace: argocd
-      server: https://kubernetes.default.svc
+      server: {{ .Values.infrastructure.EKSclusterArn | quote }}
   clusterResourceWhitelist:
     - group: cert-manager.io
       kind: ClusterIssuer
@@ -64,4 +64,4 @@ spec:
       namespaces:
         - {{ .Values.global.namespace | quote }}
       clusters:
-        - "https://kubernetes.default.svc"
+        - {{ .Values.infrastructure.EKSclusterArn | quote }}

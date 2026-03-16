@@ -19,7 +19,7 @@ spec:
         - values.yaml
 
   destination:
-    server: "https://kubernetes.default.svc"
+    server: {{ .Values.infrastructure.EKSclusterArn | quote }}
     namespace: {{ .Values.global.namespace | quote }}
 
   # Sync policy configuration
