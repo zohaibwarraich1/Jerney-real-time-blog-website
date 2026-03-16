@@ -44,6 +44,8 @@ spec:
       kind: "Certificate"
     - group: ""
       kind: ServiceAccount
+    - group: "external-secrets.io"
+      kind: SecretStore
 
   # Roles for access control within the project
   # roles:
