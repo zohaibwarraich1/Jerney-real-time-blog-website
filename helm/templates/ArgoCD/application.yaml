@@ -10,7 +10,7 @@ spec:
   source:
     repoURL: "https://github.com/zohaibwarraich1/Jerney-real-time-blog-website.git"
     targetRevision: HEAD
-    path: Jerney-real-time-blog-website-chart
+    path: helm
     
     # Helm specific configuration
     helm:
