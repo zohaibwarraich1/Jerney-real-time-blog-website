@@ -10,6 +10,8 @@ spec:
   destinations:
     - namespace: {{ .Values.global.namespace | quote }}
       server: https://kubernetes.default.svc
+    - namespace: argocd
+      server: https://kubernetes.default.svc
   clusterResourceWhitelist:
     - group: cert-manager.io
       kind: ClusterIssuer
@@ -49,8 +51,8 @@ spec:
   #       - p, proj:jerney-project:read-only, applications, get, jerney-project/*, allow
 
   # Source namespaces from which applications can be created in this project
-  # sourceNamespaces:
-  #   - "argocd"
+  sourceNamespaces:
+    - "argocd"
 
   # Sync windows for scheduled deployment control
   syncWindows:

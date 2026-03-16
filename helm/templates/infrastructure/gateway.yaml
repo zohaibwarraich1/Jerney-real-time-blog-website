@@ -8,6 +8,11 @@ metadata:
     {{- include "Jerney-real-time-blog-website-chart.labels" . | nindent 4 }}
 spec:
   gatewayClassName: {{ .Values.infrastructure.gateway.gatewayClassName | quote }}
+  infrastructure:
+    {{- with .Values.infrastructure.gateway.annotations }}
+    annotations:
+      {{- toYaml . | nindent 8 }}
+    {{- end }}
   listeners:
     - name: http
       port: 80

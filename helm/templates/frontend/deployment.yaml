@@ -47,7 +47,7 @@ spec:
           volumeMounts:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-      {{- with .Values.frontendDeployment.spec.volumes }}
+      {{- with .Values.frontendDeployment.volumes }}
       volumes:
         {{- toYaml . | nindent 8 }}
       {{- end }}

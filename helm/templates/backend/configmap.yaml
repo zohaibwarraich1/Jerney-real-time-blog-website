@@ -6,5 +6,5 @@ metadata:
   labels:
     {{- include "Jerney-real-time-blog-website-chart.labels" . | nindent 4 }}
 data:
-  DB_HOST: {{ .Values.backendConfig.dbHost }}
-  DB_PORT: {{ .Values.backendConfig.dbPort }}
+  DB_HOST: {{ .Values.backendConfig.dbHost | quote }}
+  DB_PORT: {{ .Values.backendConfig.dbPort | quote }}

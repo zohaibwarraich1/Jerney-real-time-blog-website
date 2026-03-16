@@ -15,7 +15,4 @@ spec:
       - dns01:
           route53:
             region: {{ .Values.infrastructure.clusterIssuer.region | quote }}
-            {{- if .Values.infrastructure.clusterIssuer.roleArn }}
-            roleArn: {{ .Values.infrastructure.clusterIssuer.roleArn | quote }}
-            {{- end }}
 {{- end }}

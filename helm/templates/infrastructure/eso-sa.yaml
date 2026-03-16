@@ -9,5 +9,5 @@ metadata:
   {{- if .Values.infrastructure.serviceAccount.roleArn }}
   annotations:
     eks.amazonaws.com/role-arn: {{ .Values.infrastructure.serviceAccount.roleArn | quote }}
-  {{- end }}
-{{- end }}
+  {{- end }}  
+{{- end }}  
