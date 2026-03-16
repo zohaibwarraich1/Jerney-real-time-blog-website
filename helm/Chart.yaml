@@ -1,6 +1,6 @@
 apiVersion: v2
 name: Jerney-real-time-blog-website-chart
-description: A Helm chart for Kubernetes
+description: A Helm chart for Jerney real-time blog website.
 
 # A chart can be either an 'application' or a 'library' chart.
 #

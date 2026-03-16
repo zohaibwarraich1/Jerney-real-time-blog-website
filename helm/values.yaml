@@ -287,7 +287,7 @@ databaseNetworkPolicy:
 infrastructure:
   secretStore:
     enabled: true
-    region: us-east-1
+    region: ap-south-1
     name: aws-secretsmanager
 
   gateway:
@@ -312,7 +312,7 @@ infrastructure:
     enabled: true
     name: letsencrypt-route53
     email: zohaibwarraich1@gmail.com
-    region: us-east-1
+    region: ap-south-1
     # pass arn of r53 role that has access of r53 hosted zones.
     roleArn: ""
   
