@@ -286,7 +286,7 @@ databaseNetworkPolicy:
 ################# Infrastructure Configuration #################
 infrastructure:
 
-  EKSclusterArn: ""
+  EKSclusterArn: "arn:aws:eks:ap-south-1:162499216321:cluster/jerney-cluser"
 
   secretStore:
     enabled: true
@@ -318,7 +318,7 @@ infrastructure:
     email: zohaibwarraich1@gmail.com
     region: ap-south-1
     # pass arn of r53 role that has access of r53 hosted zones.
-    roleArn: ""
+    roleArn: "arn:aws:iam::162499216321:role/CertManagerRoute53RoleForEKS"
 
   certificate:
     name: jerney-tls-cert
@@ -340,7 +340,7 @@ infrastructure:
     create: true
     name: eso-sa
     # pass arn of secret manager role that has access of secret manager.
-    roleArn: ""
+    roleArn: "arn:aws:iam::162499216321:role/access-secret-manager-for-eso-k8s"
 
 ################# NGINX Gateway Fabric Configuration #################
 
