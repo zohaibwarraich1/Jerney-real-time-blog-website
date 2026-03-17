@@ -10,6 +10,8 @@ spec:
   parentRefs:
     - name: {{ .Values.infrastructure.gateway.name | quote }}
       sectionName: http
+    - name: {{ .Values.infrastructure.gateway.name | quote }}
+      sectionName: https
   {{- with .Values.infrastructure.certificate.dnsNames }}
   hostnames:
     {{- toYaml . | nindent 4 }}

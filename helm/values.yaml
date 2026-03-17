@@ -313,7 +313,7 @@ infrastructure:
 
   clusterIssuer:
     enabled: true
-    useStaging: true
+    useStaging: false
     name: letsencrypt-route53
     email: zohaibwarraich1@gmail.com
     region: ap-south-1
@@ -326,6 +326,7 @@ infrastructure:
     domain: jerney.zohaibofficial.online
     dnsNames:
       - jerney.zohaibofficial.online
+      - www.jerney.zohaibofficial.online
 
   storageClass:
     enabled: true
