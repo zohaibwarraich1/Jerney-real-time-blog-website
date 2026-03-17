@@ -286,7 +286,7 @@ databaseNetworkPolicy:
 ################# Infrastructure Configuration #################
 infrastructure:
 
-  EKSclusterArn: "arn:aws:eks:ap-south-1:162499216321:cluster/jerney-cluser"
+  EKSclusterArn: "https://kubernetes.default.svc"
 
   secretStore:
     enabled: true
