@@ -1,6 +1,5 @@
 {{- define "Jerney-real-time-blog-website-chart.labels" -}}
 app.kubernetes.io/managed-by: "Helm"
-app.kubernetes.io/instance: {{ .Release.Name | quote }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/app-version: {{ .Chart.AppVersion | quote }}
 {{- end }}
