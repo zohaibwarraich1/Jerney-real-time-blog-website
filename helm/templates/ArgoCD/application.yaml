@@ -47,6 +47,12 @@ spec:
 
   # Ignore differences at specific JSON paths
   ignoreDifferences:
+    - group: "*"
+      kind: "*"
+      jsonPointers:
+        - /metadata/annotations/meta.helm.sh~1release-name
+        - /metadata/annotations/meta.helm.sh~1release-namespace
+        - /metadata/labels/app.kubernetes.io~1managed-by
     - group: apps
       kind: Deployment
       jsonPointers:
