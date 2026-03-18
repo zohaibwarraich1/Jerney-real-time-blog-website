@@ -48,6 +48,8 @@ spec:
       kind: SecretStore
     - group: "argoproj.io"
       kind: AppProject
+    - group: "argoproj.io"
+      kind: Application
 
   # Roles for access control within the project
   # roles:
