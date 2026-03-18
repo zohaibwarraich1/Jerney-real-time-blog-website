@@ -12,7 +12,7 @@ function CommentSection({ postId, comments, onUpdate }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!content.trim()) {
-      toast.error('Write something bestie! 💬');
+      toast.error('Write something to the other person! 💬');
       return;
     }
 
