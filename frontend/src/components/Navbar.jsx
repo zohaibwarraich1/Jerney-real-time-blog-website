@@ -11,7 +11,7 @@ function Navbar() {
         <div className="navbar-actions">
           <Link to="/create" className="btn btn-primary">
             <HiPlus size={18} />
-            <span>New Post</span>
+            <span>Add New Post</span>
           </Link>
         </div>
       </div>
