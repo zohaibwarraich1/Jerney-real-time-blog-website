@@ -256,7 +256,7 @@ resource "kubectl_manifest" "gateway_crds" {
 resource "kubectl_manifest" "argocd_project" {
   yaml_body = file("${path.module}/../argocd/app-project.yaml")
 
-  depends_on = [helm_release.argocd]
+  depends_on = [helm_release.argocd, helm_release.nginx_gateway_release, helm_release.external_secrets_release]
 }
 
 resource "kubectl_manifest" "argocd_application" {
@@ -267,7 +267,7 @@ resource "kubectl_manifest" "argocd_application" {
     vpc_cidr     = var.vpc_cidr
   })
 
-  depends_on = [helm_release.argocd, kubectl_manifest.argocd_project]
+  depends_on = [kubectl_manifest.argocd_project]
 }
 
 resource "aws_security_group" "rds_sg" {
