@@ -1,0 +1,61 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: jerney-app
+  namespace: argocd
+spec:
+  project: argo-project
+  source:
+    repoURL: "https://github.com/zohaibwarraich1/Jerney-real-time-blog-website.git"
+    targetRevision: HEAD
+    path: helm
+    helm:
+      valueFiles:
+        - values.yaml
+      parameters:
+        - name: "backendConfig.dbHost"
+          value: "${db_host}"
+        - name: "backendConfig.dbPort"
+          value: "${db_port}"
+        - name: "infrastructure.serviceAccount.roleArn"
+          value: "${eso_role_arn}"
+        - name: "backendNetworkPolicy.RdsEgress.cidr"
+          value: "${vpc_cidr}"
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: "jerney-ns"
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+      - Validate=true
+      - SkipSchemaValidation=false
+      - ApplyOutOfSyncOnly=false
+    
+    # Retry strategy for failed syncs
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+  # Ignore differences at specific JSON paths
+  ignoreDifferences:
+    - group: "*"
+      kind: "*"
+      jsonPointers:
+        - /metadata/annotations/meta.helm.sh~1release-name
+        - /metadata/annotations/meta.helm.sh~1release-namespace
+        - /metadata/labels/app.kubernetes.io~1managed-by
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/replicas
+
+  # Revision history limit
+  revisionHistoryLimit: 10

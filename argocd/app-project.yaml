@@ -1,0 +1,75 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: argo-project
+  namespace: argocd
+spec:
+  description: "Project for Jerney real-time blog website"
+  sourceRepos:
+    - "https://github.com/zohaibwarraich1/Jerney-real-time-blog-website.git"
+  destinations:
+    - namespace: "jerney-ns"
+      server: "*"
+    - namespace: "argocd"
+      server: "*"
+  clusterResourceWhitelist:
+    - group: cert-manager.io
+      kind: ClusterIssuer
+    - group: storage.k8s.io
+      kind: StorageClass
+    - group: ""
+      kind: Namespace
+  namespaceResourceWhitelist:
+    - group: "apps"
+      kind: "Deployment"
+    - group: "apps"
+      kind: "StatefulSet"
+    - group: ""
+      kind: "Service"
+    - group: ""
+      kind: "ConfigMap"
+    - group: ""
+      kind: "Secret"
+    - group: "autoscaling"
+      kind: "HorizontalPodAutoscaler"
+    - group: "networking.k8s.io"
+      kind: "NetworkPolicy"
+    - group: "external-secrets.io"
+      kind: "ExternalSecret"
+    - group: "gateway.networking.k8s.io"
+      kind: "Gateway"
+    - group: "gateway.networking.k8s.io"
+      kind: "HTTPRoute"
+    - group: "cert-manager.io"
+      kind: "Certificate"
+    - group: ""
+      kind: ServiceAccount
+    - group: "external-secrets.io"
+      kind: SecretStore
+    - group: "argoproj.io"
+      kind: AppProject
+    - group: "argoproj.io"
+      kind: Application
+
+  # Roles for access control within the project
+  # roles:
+  #   - name: read-only
+  #     description: Read-only privileges to jerney-project
+  #     policies:
+  #       - p, proj:jerney-project:read-only, applications, get, jerney-project/*, allow
+
+  # Source namespaces from which Application resources can be apart of this project
+  sourceNamespaces:
+    - "argocd"
+
+  # Sync windows for scheduled deployment control
+  syncWindows:
+    - kind: allow
+      schedule: "* * * * *"
+      duration: "1h"
+      applications:
+        - "*"
+      namespaces:
+        - "*"
+      clusters:
+        - "*"
