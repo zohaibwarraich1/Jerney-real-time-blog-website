@@ -59,7 +59,7 @@ output "iam_policies" {
 # }
 
 output "jerney_app" {
-  value = helm_release.jerney_app_release.status
+  value = kubectl_manifest.argocd_application.id
 }
 
 # output "argocd_release" {

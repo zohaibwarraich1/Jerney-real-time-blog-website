@@ -236,7 +236,7 @@ resource "helm_release" "nginx_gateway_release" {
 }
 
 resource "time_sleep" "wait_for_nlb" {
-  depends_on      = [helm_release.jerney_app_release]
+  depends_on      = [kubectl_manifest.argocd_application]
   create_duration = "4m" # 4 minutes wait karega
 }
 
@@ -253,38 +253,21 @@ resource "kubectl_manifest" "gateway_crds" {
   depends_on = [module.eks]
 }
 
-resource "helm_release" "jerney_app_release" {
-  name             = "jerney-app"
-  chart            = "../helm"
-  namespace        = "jerney-ns"
-  create_namespace = true
-  recreate_pods    = true
-  lint             = true
-  cleanup_on_fail  = true
-  wait             = true
-  set = [
-    {
-      name  = "infrastructure.serviceAccount.roleArn"
-      value = module.iam_role_for_service_accounts["ESOAccessSecretManagerPolicyForEKS"].arn
-    },
-    {
-      name  = "backendConfig.dbHost"
-      value = module.rds.db_instance_address
-    },
-    {
-      name  = "backendConfig.dbPort"
-      value = tostring(module.rds.db_instance_port)
-    },
-    {
-      name  = "backendNetworkPolicy.RdsEgress.cidr"
-      value = var.vpc_cidr
-    }
-  ]
-  depends_on = [
-    helm_release.nginx_gateway_release,
-    module.rds,
-    helm_release.external_secrets_release
-  ]
+resource "kubectl_manifest" "argocd_project" {
+  yaml_body = file("${path.module}/../argocd/app-project.yaml")
+
+  depends_on = [helm_release.argocd]
+}
+
+resource "kubectl_manifest" "argocd_application" {
+  yaml_body = templatefile("${path.module}/../argocd/application.yaml", {
+    db_host      = module.rds.db_instance_address
+    db_port      = tostring(module.rds.db_instance_port)
+    eso_role_arn = module.iam_role_for_service_accounts["ESOAccessSecretManagerPolicyForEKS"].arn
+    vpc_cidr     = var.vpc_cidr
+  })
+
+  depends_on = [helm_release.argocd, kubectl_manifest.argocd_project]
 }
 
 resource "aws_security_group" "rds_sg" {

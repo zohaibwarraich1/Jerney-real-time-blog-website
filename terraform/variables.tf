@@ -430,7 +430,7 @@ variable "rds_storage_type" {
 
 variable "rds_family" {
   type    = string
-  default = "postgres18"
+  default = "postgres16"
 }
 
 variable "rds_instance_class" {
@@ -445,7 +445,7 @@ variable "rds_engine" {
 
 variable "rds_engine_version" {
   type    = string
-  default = "18.2"
+  default = "16.4"
 }
 
 variable "rds_create_db_subnet_group" {
