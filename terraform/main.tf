@@ -419,7 +419,7 @@ module "cdn" {
     ssl_support_method  = "sni-only"
   }
 
-  depends_on = [aws_acm_certificate_validation.validate_cdn_cert, module.route53]
+  depends_on = [aws_acm_certificate_validation.validate_cdn_cert, module.route53, time_sleep.wait_for_nlb]
 }
 
 resource "aws_route53_record" "cdn_alias" {
