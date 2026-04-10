@@ -3,6 +3,8 @@ kind: Application
 metadata:
   name: jerney-app
   namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
 spec:
   project: argo-project
   source:
@@ -21,6 +23,8 @@ spec:
           value: "${eso_role_arn}"
         - name: "backendNetworkPolicy.RdsEgress.cidr"
           value: "${vpc_cidr}"
+        # - name: "infrastructure.clusterIssuer.useStaging"
+        #   value: "true"
   destination:
     server: "https://kubernetes.default.svc"
     namespace: "jerney-ns"

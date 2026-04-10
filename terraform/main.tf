@@ -237,7 +237,7 @@ resource "helm_release" "nginx_gateway_release" {
 
 resource "time_sleep" "wait_for_nlb" {
   depends_on      = [kubectl_manifest.argocd_application]
-  create_duration = "4m" # 4 minutes wait karega
+  create_duration = "6m" # 6 minutes wait karega
 }
 
 resource "kubectl_manifest" "gateway_crds" {
