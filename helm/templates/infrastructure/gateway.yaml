@@ -6,6 +6,10 @@ metadata:
   namespace: {{ .Values.global.namespace | quote }}
   labels:
     {{- include "Jerney-real-time-blog-website-chart.labels" . | nindent 4 }}
+  {{- with .Values.infrastructure.gateway.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   gatewayClassName: {{ .Values.infrastructure.gateway.gatewayClassName | quote }}
   infrastructure:

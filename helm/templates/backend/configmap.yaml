@@ -8,3 +8,4 @@ metadata:
 data:
   DB_HOST: {{ .Values.backendConfig.dbHost | quote }}
   DB_PORT: {{ .Values.backendConfig.dbPort | quote }}
+  PGSSLMODE: "no-verify"  # RDS SSL required hai — no-verify certificate check skip karta hai (VPC internal)

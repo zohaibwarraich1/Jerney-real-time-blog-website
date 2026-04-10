@@ -198,13 +198,16 @@ backendHpa:
 # ConfigMap
 backendConfig:
   name: "backend-config"
-  dbHost: "database-headless-service"
+  dbHost: ""
   dbPort: "5432"
 
 # Network Policy
 backendNetworkPolicy:
   enabled: true
   name: "backend-network-policy"
+  RdsEgress:
+    cidr: "10.0.0.0/16"
+    port: 5432
 
 # External Secrets (AWS Secret Manager)
 backendExternalSecret:
@@ -218,74 +221,73 @@ backendExternalSecret:
 ################# Database Configuration #################
 
 # Statefulset
-databaseStatefulset:
-  name: database-statefulset
-  replicas: 1
-  podName: "database-pods"
-  spec:
-    securityContext:
-      runAsUser: 999
-      runAsGroup: 999
-      fsGroup: 999
-    container:
-      image:
-        repository: postgres
-        tag: "15"
-      envFrom:
-        - secretRef:
-            name: "database-secret"
-      ports:
-        - name: postgres-port
-          containerPort: 5432
-      resources:
-        requests:
-          cpu: "250m"
-          memory: "256Mi"
-        limits:
-          cpu: "500m"
-          memory: "512Mi"
-      volumeMounts:
-        - name: database-pvc
-          mountPath: /var/lib/postgresql/data
-          subPath: data
-        - name: pg-run-sockets
-          mountPath: /var/run/postgresql
-        - name: pg-tmp-files
-          mountPath: /tmp
-    volumes:
-      - name: pg-run-sockets
-        emptyDir: {}
-      - name: pg-tmp-files
-        emptyDir: {}
+# databaseStatefulset:
+#   name: database-statefulset
+#   replicas: 1
+#   podName: "database-pods"
+#   spec:
+#     securityContext:
+#       runAsUser: 999
+#       runAsGroup: 999
+#       fsGroup: 999
+#     container:
+#       image:
+#         repository: postgres
+#         tag: "15"
+#       envFrom:
+#         - secretRef:
+#             name: "database-secret"
+#       ports:
+#         - name: postgres-port
+#           containerPort: 5432
+#       resources:
+#         requests:
+#           cpu: "250m"
+#           memory: "256Mi"
+#         limits:
+#           cpu: "500m"
+#           memory: "512Mi"
+#       volumeMounts:
+#         - name: database-pvc
+#           mountPath: /var/lib/postgresql/data
+#           subPath: data
+#         - name: pg-run-sockets
+#           mountPath: /var/run/postgresql
+#         - name: pg-tmp-files
+#           mountPath: /tmp
+#     volumes:
+#       - name: pg-run-sockets
+#         emptyDir: {}
+#       - name: pg-tmp-files
+#         emptyDir: {}
 
-  persistence:
-    size: 1Gi
-    storageClass: ebs-sc
-    pvcName: database-pvc
+#   persistence:
+#     size: 1Gi
+#     storageClass: ebs-sc
+#     pvcName: database-pvc
 
-# Service
-databaseService:
-  name: database-headless-service
-  port: 5432
-  portName: postgres
+# # Service
+# databaseService:
+#   name: database-headless-service
+#   port: 5432
+#   portName: postgres
 
-# External Secrets (AWS Secret Manager)
-databaseExternalSecret:
-  name: "database-external-secret"
-  remoteKey: "prod/jerney/database"
-  spec:
-    refreshInterval: 1h
-    target:
-      name: database-secret
+# # External Secrets (AWS Secret Manager)
+# databaseExternalSecret:
+#   name: "database-external-secret"
+#   remoteKey: "prod/jerney/database"
+#   spec:
+#     refreshInterval: 1h
+#     target:
+#       name: database-secret
 
-# Network Policy
-databaseNetworkPolicy:
-  enabled: true
-  name: "database-network-policy"
+# # Network Policy
+# databaseNetworkPolicy:
+#   enabled: true
+#   name: "database-network-policy"
 
 ################# Infrastructure Configuration #################
 infrastructure:
-
   EKSclusterArn: "https://kubernetes.default.svc"
 
   secretStore:
@@ -298,9 +300,10 @@ infrastructure:
     gatewayClassName: nginx
     name: jerney-gateway
     annotations:
-      service.beta.kubernetes.io/aws-load-balancer-type: "external"
+      service.beta.kubernetes.io/aws-load-balancer-type: "nlb-ip"
       service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: "ip"
       service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
+      service.beta.kubernetes.io/aws-load-balancer-internal: "false"
 
   httpRoutes:
     enabled: true
@@ -317,8 +320,6 @@ infrastructure:
     name: letsencrypt-route53
     email: zohaibwarraich1@gmail.com
     region: ap-south-1
-    # pass arn of r53 role that has access of r53 hosted zones.
-    roleArn: "arn:aws:iam::162499216321:role/CertManagerRoute53RoleForEKS"
 
   certificate:
     name: jerney-tls-cert
@@ -341,29 +342,4 @@ infrastructure:
     create: true
     name: eso-sa
     # pass arn of secret manager role that has access of secret manager.
-    roleArn: "arn:aws:iam::162499216321:role/access-secret-manager-for-eso-k8s"
-
-################# NGINX Gateway Fabric Configuration #################
-
-# nginx-gateway-fabric:
-#   namespaceOverride: "jerney-ns"
-#   nginxGateway:
-#     # This must match infrastructure.gateway.gatewayClassName
-#     gatewayClassName: "nginx"
-#     replicaCount: 2
-#   service:
-#     # Use LoadBalancer for EKS to get an external IP
-#     type: LoadBalancer
-#     annotations:
-#     # Create NLB, not CLB
-#     service.beta.kubernetes.io/aws-load-balancer-type: "external"
-#     # IP target type — traffic direct to pod (production best practice)
-#     service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: "ip"
-#     # Internet-facing
-#     service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
-#     # NLB name
-#     service.beta.kubernetes.io/aws-load-balancer-name: "nginx-gateway-nlb"
-#     # Cross-zone load balancing — production mein ON karo
-#     service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
-#     # Health check
-#     service.beta.kubernetes.io/aws-load-balancer-healthcheck-protocol: "TCP"
+    roleArn: null

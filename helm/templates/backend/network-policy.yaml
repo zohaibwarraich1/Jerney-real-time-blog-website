@@ -26,12 +26,11 @@ spec:
   
   egress:
     - to:
-        - podSelector:
-            matchLabels:
-              app: {{ .Values.databaseStatefulset.podName }}
+        - ipBlock:
+            cidr: {{ .Values.backendNetworkPolicy.RdsEgress.cidr }}
       ports:
         - protocol: TCP
-          port: {{ .Values.databaseService.port }}
+          port: {{ .Values.backendNetworkPolicy.RdsEgress.port }}
     - to:
         - namespaceSelector: {}
         - podSelector:
