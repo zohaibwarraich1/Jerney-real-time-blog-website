@@ -445,7 +445,7 @@ variable "rds_engine" {
 
 variable "rds_engine_version" {
   type    = string
-  default = "16.4"
+  default = "16"
 }
 
 variable "rds_create_db_subnet_group" {
