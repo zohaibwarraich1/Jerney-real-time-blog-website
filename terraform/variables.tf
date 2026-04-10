@@ -332,7 +332,12 @@ variable "route53_records" {
       full_name = "jerney.zohaibofficial.online"
       ttl       = 300
       type      = "CAA"
-      records   = ["0 issue \"letsencrypt.org\"", "0 issuewild \"letsencrypt.org\""]
+      records = [
+        "0 issue \"letsencrypt.org\"",
+        "0 issuewild \"letsencrypt.org\"",
+        "0 issue \"amazon.com\"",
+        "0 issuewild \"amazon.com\""
+      ]
     }
   }
 }

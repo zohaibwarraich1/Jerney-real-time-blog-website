@@ -170,6 +170,22 @@ resource "helm_release" "argocd" {
     {
       name  = "redis-ha.enabled"
       value = true
+    },
+    {
+      name  = "server.service.type"
+      value = "LoadBalancer"
+    },
+    {
+      name  = "server.service.annotations.service\\.beta\\.kubernetes\\.io/aws-load-balancer-type"
+      value = "nlb-ip"
+    },
+    {
+      name  = "server.service.annotations.service\\.beta\\.kubernetes\\.io/aws-load-balancer-scheme"
+      value = "internet-facing"
+    },
+    {
+      name  = "server.service.annotations.service\\.beta\\.kubernetes\\.io/aws-load-balancer-nlb-target-type"
+      value = "ip"
     }
   ]
   depends_on = [module.eks]
@@ -387,26 +403,12 @@ resource "aws_route53_record" "cdn_cert_validation_records" {
   depends_on = [aws_acm_certificate.cdn_cert]
 }
 
-resource "aws_route53_record" "caa_record_allowing_aws_CA" {
-  name            = var.domain_name
-  type            = "CAA"
-  zone_id         = module.route53.id
-  ttl             = 60
-  allow_overwrite = true
-  records = [
-    "0 issue \"amazon.com\"",
-    "0 issuewild \"amazon.com\""
-  ]
-
-  depends_on = [aws_acm_certificate.cdn_cert]
-}
-
 resource "aws_acm_certificate_validation" "validate_cdn_cert" {
   provider                = aws.us-east-1
   certificate_arn         = aws_acm_certificate.cdn_cert.arn
   validation_record_fqdns = [for record in aws_route53_record.cdn_cert_validation_records : record.fqdn]
 
-  depends_on = [aws_route53_record.cdn_cert_validation_records, aws_route53_record.caa_record_allowing_aws_CA]
+  depends_on = [aws_route53_record.cdn_cert_validation_records]
 }
 
 module "cdn" {
