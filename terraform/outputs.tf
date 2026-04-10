@@ -54,17 +54,9 @@ output "iam_policies" {
   }
 }
 
-# output "argocd_release_name" {
-#   value = helm_release.argocd_release.name
-# }
-
 output "jerney_app" {
   value = kubectl_manifest.argocd_application.id
 }
-
-# output "argocd_release" {
-#   value = helm_release.argocd_release.status
-# }
 
 output "nginx_gateway_release" {
   value = helm_release.nginx_gateway_release.status
