@@ -250,7 +250,7 @@ infrastructure:
     enabled: true
     useStaging: false
     name: letsencrypt-route53
-    email: zohaibwarraich1@gmail.com
+    email: zohaibwarraich@gmail.com
     region: ap-south-1
 
   certificate:
