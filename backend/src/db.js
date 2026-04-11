@@ -33,7 +33,7 @@ async function initDB() {
       );
     `);
 
-    console.log('✅ Database tables initialized');
+    console.log('✅ Database tables initialized.');
   } finally {
     client.release();
   }
