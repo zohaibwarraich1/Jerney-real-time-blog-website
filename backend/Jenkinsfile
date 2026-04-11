@@ -15,30 +15,22 @@ pipeline {
     }
 
     stages {
-        
-        stage('Checkout') {
-            steps {
-                echo "Checking out code..."
-                checkout scm
-                script {
-                    def shortCommit = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
-                    env.IMAGE_TAG = "v${env.BUILD_NUMBER}-${shortCommit}"
-                }
-            }
-        }
-
         stage('Backend Pipeline') {
             when {
-                anyOf {
-                    changeset 'backend/**'
-                    expression { return currentBuild.number == 1 }
-                    expression { 
-                        // Manual check of the current commit's file list to handle empty changelogs
-                        return sh(script: "git log -1 --name-only | grep 'backend/'", returnStatus: true) == 0 
-                    }
-                }
+                changeset "backend/**"
             }
             stages {
+                stage('Checkout') {
+                    steps {
+                        echo "Checking out code..."
+                        checkout scm
+                        script {
+                            def shortCommit = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
+                            env.IMAGE_TAG = "v${env.BUILD_NUMBER}-${shortCommit}"
+                        }
+                    }
+                }
+
                 stage("Build") {
                     steps {
                         echo "Building..."
@@ -88,16 +80,18 @@ pipeline {
                                 stage('SonarQube Analysis') {
                                     steps {
                                         echo 'Running SonarQube analysis...'
-                                        withSonarQubeEnv('sonarqube-server') {
-                                            sh """
-                                                ${SONAR_SCANNER}/bin/sonar-scanner \
-                                                    -Dsonar.projectKey=Jerney-Backend \
-                                                    -Dsonar.projectName=Jerney-Backend \
-                                                    -Dsonar.sources=backend/src \
-                                                    -Dsonar.exclusions=node_modules/**,dist/**,coverage/** \
-                                                    -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
-                                                    -Dsonar.sourceEncoding=UTF-8
-                                            """
+                                        dir('backend') {
+                                            withSonarQubeEnv('sonarqube-server') {
+                                                sh """
+                                                    ${SONAR_SCANNER}/bin/sonar-scanner \
+                                                        -Dsonar.projectKey=Jerney-Backend \
+                                                        -Dsonar.projectName=Jerney-Backend \
+                                                        -Dsonar.sources=backend/src \
+                                                        -Dsonar.exclusions=node_modules/**,dist/**, coverage/** \
+                                                        -Dsonar.javascript.lcov.reportPaths=coverage/lcov.  info \
+                                                        -Dsonar.sourceEncoding=UTF-8
+                                                """
+                                            }
                                         }
                                     }
                                 }
@@ -105,11 +99,11 @@ pipeline {
                                 stage('Quality Gate') {
                                     steps {
                                         echo 'Quality Gate is currently in Non-Blocking mode (Webhook issues)...'
-                                        /* 
+                                        // /* 
                                         timeout(time: 10, unit: 'MINUTES') {
                                             waitForQualityGate abortPipeline: true
                                         }
-                                        */
+                                        // */
                                     }
                                 }
                             }
