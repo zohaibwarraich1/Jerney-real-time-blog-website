@@ -12,7 +12,6 @@ pipeline {
 
     options {
         buildDiscarder logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '2')
-        rateLimitBuilds(throttle: [count: 5, durationName: 'sec', userBoost: false])
     }
 
     stages {
