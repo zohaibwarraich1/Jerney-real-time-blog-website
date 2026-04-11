@@ -1,7 +1,7 @@
 FROM node:25 AS builder
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci --production || npm install --production || exit 1
+RUN npm install --production || exit 1
 COPY . .
 
 FROM node:25-alpine3.22
