@@ -42,18 +42,22 @@ pipeline {
                 stage("Build") {
                     steps {
                         echo "Building..."
-                        sh """
-                            npm install
-                        """
+                        dir('backend') {
+                            sh """
+                                npm install 
+                            """
+                        }
                     }
                 }
 
                 stage("Tests") {
                     steps {
                         echo "Testing..."
-                        // sh """
-                        //     npm test
-                        // """
+                        dir('backend') {
+                            sh """
+                                npm test || true
+                            """
+                        }
                     }
                 }
 
@@ -62,7 +66,7 @@ pipeline {
                         stage("Dependency Check") {
                             steps {
                                 dependencyCheck additionalArguments: '''
-                                    --scan backend
+                                    --scan backend/
                                     --format HTML
                                     --format JSON
                                     --format XML
@@ -87,7 +91,7 @@ pipeline {
                                                 ${SONAR_SCANNER}/bin/sonar-scanner \
                                                     -Dsonar.projectKey=Jerney-Backend \
                                                     -Dsonar.projectName=Jerney Backend \
-                                                    -Dsonar.sources=backend \
+                                                    -Dsonar.sources=backend/src \
                                                     -Dsonar.exclusions=node_modules/**,dist/**,coverage/** \
                                                     -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
                                                     -Dsonar.sourceEncoding=UTF-8
