@@ -120,11 +120,13 @@ pipeline {
                 stage('Build Docker Image') {
                     steps {
                         echo 'Building Docker image...'
-                        withCredentials([usernamePassword(credentialsId: 'docker_creds', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                            sh """
-                                echo "$PASSWORD" | docker login -u "$USERNAME" --password-stdin
-                                docker build -f backend/Dockerfile -t zohaibwarraich/jerney-backend:${IMAGE_TAG} .
-                            """
+                        dir('backend') {
+                            withCredentials([usernamePassword(credentialsId: 'docker_creds', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                                sh """
+                                    echo "$PASSWORD" | docker login -u "$USERNAME" --password-stdin
+                                    docker build -t zohaibwarraich/jerney-backend:${IMAGE_TAG} .
+                                """
+                            }
                         }
                     }
                 }
