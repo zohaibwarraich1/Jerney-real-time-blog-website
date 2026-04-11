@@ -1,0 +1,195 @@
+pipeline {
+    agent any
+    
+    tools {
+        nodejs 'nodejs'
+        'dependency-check' 'DC'
+    }
+    
+    environment {
+        SONAR_SCANNER = tool "sonarqube-scanner-tool"
+    }
+
+    options {
+        buildDiscarder logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '2')
+        rateLimitBuilds([count: 1, durationName: 'second', userBoost: false])
+    }
+
+    stages {
+        
+        stage('Checkout') {
+            steps {
+                echo "Checking out code..."
+                checkout scm
+                script {
+                    def shortCommit = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
+                    env.IMAGE_TAG = "v${env.BUILD_NUMBER}-${shortCommit}"
+                }
+            }
+        }
+
+        stage('Backend Pipeline') {
+            when { changeset 'backend/**' }
+            stages {
+                stage("Build") {
+                    steps {
+                        echo "Building..."
+                        sh """
+                            npm install
+                        """
+                    }
+                }
+
+                stage("Tests") {
+                    steps {
+                        echo "Testing..."
+                        // sh """
+                        //     npm test
+                        // """
+                    }
+                }
+
+                stage("Security& Quality Analysis") {
+                    parallel {
+                        stage("Dependency Check") {
+                            steps {
+                                dependencyCheck additionalArguments: '''
+                                    --scan backend
+                                    --format HTML
+                                    --format JSON
+                                    --format XML
+                                    --failOnCVSS 7''', 
+                                    nvdCredentialsId: 'owasp-nvd-api-key', 
+                                    odcInstallation: 'DC'
+                            }
+                            post {
+                                always {
+                                    dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+                                }
+                            }
+                        }
+
+                        stage('Code Quality') {
+                            stages {
+                                stage('SonarQube Analysis') {
+                                    steps {
+                                        echo 'Running SonarQube analysis...'
+                                        withSonarQubeEnv('sonarqube-server') {
+                                            sh """
+                                                ${SONAR_SCANNER}/bin/sonar-scanner \
+                                                    -Dsonar.projectKey=Jerney-Backend \
+                                                    -Dsonar.projectName=Jerney Backend \
+                                                    -Dsonar.sources=backend \
+                                                    -Dsonar.exclusions=node_modules/**,dist/**,coverage/** \
+                                                    -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
+                                                    -Dsonar.sourceEncoding=UTF-8
+                                            """
+                                        }
+                                    }
+                                }
+                                        
+                                stage('Quality Gate') {
+                                    steps {
+                                        echo 'Waiting for Quality Gate...'
+                                        timeout(time: 10, unit: 'MINUTES') {
+                                            waitForQualityGate abortPipeline: true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                stage('Build Docker Image') {
+                    steps {
+                        echo 'Building Docker image...'
+                        withCredentials([usernamePassword(credentialsId: 'docker_creds', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                            sh """
+                                echo "$PASSWORD" | docker login -u "$USERNAME" --password-stdin
+                                docker build -f backend/Dockerfile -t zohaibwarraich/jerney-backend:${IMAGE_TAG} .
+                            """
+                        }
+                    }
+                }
+
+                stage('Trivy Image Scan') {
+                    steps {
+                        echo 'Scanning Docker image with Trivy...'
+                        sh """
+                            trivy image \
+                                --severity HIGH,CRITICAL \
+                                --exit-code 0 \
+                                --no-progress \
+                                --format template \
+                                --template '@/usr/local/share/trivy/templates/html.tpl' \
+                                --output trivy-report.html \
+                                zohaibwarraich/jerney-backend:${IMAGE_TAG}
+                        """
+                    }
+                    post {
+                        always {
+                            publishHTML([
+                                allowMissing: false,
+                                alwaysLinkToLastBuild: true,
+                                keepAll: true,
+                                reportDir: '.',
+                                reportFiles: 'trivy-report.html',
+                                reportName: 'Backend Image Trivy Security Scan Report',
+                                reportTitles: 'Trivy Vulnerability Report'
+                            ])
+                        }
+                    }
+                }
+
+                stage('Push to DockerHub') {
+                    steps {
+                        echo 'Pushing image to DockerHub...'
+                        withCredentials([usernamePassword(credentialsId: 'docker_creds', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                            sh """
+                                echo "$PASSWORD" | docker login -u "$USERNAME" --password-stdin
+                                docker push zohaibwarraich/jerney-backend:${IMAGE_TAG}
+                            """
+                        }
+                    }
+                }
+
+                stage('Update Manifest & Helm Values') {
+                    steps {
+                        echo 'Updating Kubernetes manifest and Helm values...'
+                        withCredentials([usernamePassword(credentialsId: 'github_creds', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
+                            sh """
+                                git config user.email "jenkins@gmail.com"
+                                git config user.name "Jenkins"
+                                
+                                # Update Deployment Manifest
+                                sed -i 's|image: zohaibwarraich/jerney-backend:.*|image: zohaibwarraich/jerney-backend:${IMAGE_TAG}|g' k8s/backend/deployment.yaml
+                                
+                                # Update Helm Values
+                                # Using sed to find the repository line and update the next line (tag)
+                                sed -i '/repository: zohaibwarraich\\/jerney-backend/{n;s/tag: .*/tag: "${IMAGE_TAG}"/;}' helm/values.yaml
+                                
+                                git add k8s/backend/deployment.yaml helm/values.yaml
+                                git commit -m "Update backend image tag to ${IMAGE_TAG} in both helm values.yaml and k8s manifests [skip ci]"
+                                git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/zohaibwarraich1/Jerney-real-time-blog-website.git HEAD:main
+                            """
+                        }
+                    }
+                }
+            }
+            post {
+                always {
+                    echo 'Cleaning up Backend Pipeline images...'
+                    sh "docker rmi zohaibwarraich/jerney-backend:${IMAGE_TAG} || true"
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo 'Final Workspace Cleanup...'
+            cleanWs()
+        }
+    }
+}
