@@ -104,10 +104,12 @@ pipeline {
 
                                 stage('Quality Gate') {
                                     steps {
-                                        echo 'Waiting for Quality Gate...'
+                                        echo 'Quality Gate is currently in Non-Blocking mode (Webhook issues)...'
+                                        /* 
                                         timeout(time: 10, unit: 'MINUTES') {
                                             waitForQualityGate abortPipeline: true
                                         }
+                                        */
                                     }
                                 }
                             }
