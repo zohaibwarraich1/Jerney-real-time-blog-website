@@ -36,7 +36,7 @@ spec:
         
       containers:
         - name: backend-container
-          image: zohaibwarraich/jerney-backend:v16-7b6d357
+          image: zohaibwarraich/jerney-backend:v20-19f8280
           imagePullPolicy: Always # Ensure it pulls the latest image tag during restarts
           
           securityContext:
