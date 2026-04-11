@@ -198,9 +198,9 @@ resource "helm_release" "external_secrets_release" {
   namespace        = "external-secrets"
   create_namespace = true
   recreate_pods    = true
-  # upgrade_install  = true
-  # version          = "2.2.0"
-  depends_on = [module.eks]
+  wait             = true
+  timeout          = 1200 # 20 minutes for clean uninstallation
+  depends_on       = [module.eks]
 }
 
 resource "helm_release" "nginx_gateway_release" {
@@ -232,6 +232,7 @@ resource "helm_release" "nginx_gateway_release" {
     }
   ]
 
+  timeout    = 1200 # 20 minutes
   depends_on = [kubectl_manifest.gateway_crds]
 }
 
@@ -256,7 +257,7 @@ resource "kubectl_manifest" "gateway_crds" {
 resource "kubectl_manifest" "argocd_project" {
   yaml_body = file("${path.module}/../argocd/app-project.yaml")
 
-  depends_on = [helm_release.argocd, helm_release.nginx_gateway_release, helm_release.external_secrets_release]
+  depends_on = [helm_release.argocd]
 }
 
 resource "kubectl_manifest" "argocd_application" {
@@ -267,7 +268,12 @@ resource "kubectl_manifest" "argocd_application" {
     vpc_cidr     = var.vpc_cidr
   })
 
-  depends_on = [kubectl_manifest.argocd_project, module.rds]
+  depends_on = [
+    kubectl_manifest.argocd_project,
+    module.rds,
+    helm_release.external_secrets_release,
+    helm_release.nginx_gateway_release
+  ]
 }
 
 resource "aws_security_group" "rds_sg" {
