@@ -267,7 +267,7 @@ resource "kubectl_manifest" "argocd_application" {
     vpc_cidr     = var.vpc_cidr
   })
 
-  depends_on = [kubectl_manifest.argocd_project]
+  depends_on = [kubectl_manifest.argocd_project, module.rds]
 }
 
 resource "aws_security_group" "rds_sg" {
