@@ -28,7 +28,16 @@ pipeline {
         }
 
         stage('Backend Pipeline') {
-            when { changeset 'backend/**' }
+            when {
+                anyOf {
+                    changeset 'backend/**'
+                    expression { return currentBuild.number == 1 }
+                    expression { 
+                        // Manual check of the current commit's file list to handle empty changelogs
+                        return sh(script: "git log -1 --name-only | grep 'backend/'", returnStatus: true) == 0 
+                    }
+                }
+            }
             stages {
                 stage("Build") {
                     steps {
