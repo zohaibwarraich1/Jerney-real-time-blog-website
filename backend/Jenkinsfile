@@ -90,7 +90,7 @@ pipeline {
                                             sh """
                                                 ${SONAR_SCANNER}/bin/sonar-scanner \
                                                     -Dsonar.projectKey=Jerney-Backend \
-                                                    -Dsonar.projectName=Jerney Backend \
+                                                    -Dsonar.projectName=Jerney-Backend \
                                                     -Dsonar.sources=backend/src \
                                                     -Dsonar.exclusions=node_modules/**,dist/**,coverage/** \
                                                     -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
