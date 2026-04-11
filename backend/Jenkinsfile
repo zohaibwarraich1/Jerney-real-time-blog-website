@@ -65,14 +65,16 @@ pipeline {
                     parallel {
                         stage("Dependency Check") {
                             steps {
-                                dependencyCheck additionalArguments: '''
-                                    --scan backend/
-                                    --format HTML
-                                    --format JSON
-                                    --format XML
-                                    --failOnCVSS 7''', 
-                                    nvdCredentialsId: 'owasp-nvd-api-key', 
-                                    odcInstallation: 'DC'
+                                dir('backend') {
+                                    dependencyCheck additionalArguments: '''
+                                        --scan .
+                                        --format HTML
+                                        --format JSON
+                                        --format XML
+                                        --failOnCVSS 7''', 
+                                        nvdCredentialsId: 'owasp-nvd-api-key', 
+                                        odcInstallation: 'DC'
+                                }
                             }
                             post {
                                 always {
@@ -99,7 +101,7 @@ pipeline {
                                         }
                                     }
                                 }
-                                        
+
                                 stage('Quality Gate') {
                                     steps {
                                         echo 'Waiting for Quality Gate...'
