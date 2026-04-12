@@ -15,10 +15,12 @@ pipeline {
     }
 
     stages {
-        stage('Backend Pipeline') {
+        stage('Frontend Pipeline') {
+            
             when {
                 changeset "frontend/**"
             }
+
             stages {
                 stage('Checkout') {
                     steps {
