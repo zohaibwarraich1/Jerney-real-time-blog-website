@@ -4,7 +4,7 @@ import { getPost, updatePost } from '../api';
 import { HiArrowLeft } from 'react-icons/hi2';
 import toast from 'react-hot-toast';
 
-const EMOJIS = ['✨', '🔥', '💡', '🚀', '💀', '🎯', '💎', '🌈', '🎵', '📸', '🧠', '💬', '❤️', '⚡', '🌊', '🍕', '📚'];
+const EMOJIS = ['✨', '🔥', '💡', '🚀', '💀', '🎯', '💎', '🌈', '🎵', '📸', '🧠', '💬', '❤️', '⚡', '🌊', '🍕', '📚', '🦷'];
 
 function EditPost() {
   const { id } = useParams();
