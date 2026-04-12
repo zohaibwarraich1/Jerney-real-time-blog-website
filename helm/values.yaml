@@ -131,7 +131,7 @@ backendDeployment:
       name: backend-container
       image:
         repository: zohaibwarraich/jerney-backend
-        tag: "v20-19f8280"
+        tag: "v1"
         pullPolicy: Always
       ports:
         - name: tcp
