@@ -17,7 +17,13 @@ pipeline {
     stages {
         stage('Backend Pipeline') {
             when {
-                changeset "backend/**"
+                anyOf {
+                    changeset "backend/**"
+                    expression {
+                        // Safe fallback for classic pipelines
+                        return sh(script: "git diff --name-only HEAD~1..HEAD | grep -q '^backend/'", returnStatus: true) == 0
+                    }
+                }
             }
             stages {
                 stage('Checkout') {

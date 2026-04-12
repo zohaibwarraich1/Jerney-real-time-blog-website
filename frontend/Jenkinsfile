@@ -16,9 +16,14 @@ pipeline {
 
     stages {
         stage('Frontend Pipeline') {
-            
             when {
-                changeset "frontend/**"
+                anyOf {
+                    changeset "frontend/**"
+                    expression {
+                        // Safe fallback for classic pipelines
+                        return sh(script: "git diff --name-only HEAD~1..HEAD | grep -q '^frontend/'", returnStatus: true) == 0
+                    }
+                }
             }
 
             stages {
