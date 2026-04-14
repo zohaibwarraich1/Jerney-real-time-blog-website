@@ -1,17 +1,17 @@
-name: Backend CI/CD Pipeline
+name: Frontend CI/CD Pipeline
 
 on:
   push:
     branches: [main]
     paths:
-      - "backend/**"
+      - "frontend/**"
   pull_request:
     branches: [main]
     paths:
-      - "backend/**"
+      - "frontend/**"
 
 env:
-  DOCKER_IMAGE: zohaibwarraich/jerney-backend
+  DOCKER_IMAGE: zohaibwarraich/jerney-frontend
 
 jobs:
   setup:
@@ -42,24 +42,24 @@ jobs:
       - name: Cache Node Modules
         uses: actions/cache@v5
         with:
-          path: backend/node_modules
-          key: node_modules-${{ hashFiles('backend/package.json') }}
+          path: frontend/node_modules
+          key: node_modules-${{ hashFiles('frontend/package.json') }}
 
-      - name: Build Backend using Nodejs
+      - name: Build Frontend using Nodejs
         uses: actions/setup-node@v6
         with:
           node-version: "22"
 
       - name: Build
-        working-directory: backend
+        working-directory: frontend
         run: npm install
 
       - name: Compilation
-        working-directory: backend
+        working-directory: frontend
         run: npm run build --if-present
     # - name: Test
     #   run: npm test
-    #   working-directory: backend
+    #   working-directory: frontend
 
   dependency-check:
     name: OWASP Dependency Check
@@ -74,16 +74,16 @@ jobs:
       - name: Restore Cache Node Modules
         uses: actions/cache/restore@v5
         with:
-          path: backend/node_modules
-          key: node_modules-${{ hashFiles('backend/package.json') }}
+          path: frontend/node_modules
+          key: node_modules-${{ hashFiles('frontend/package.json') }}
 
       - name: Run OWASP Dependency Check
         uses: dependency-check/Dependency-Check_Action@main
         with:
-          project: "jerney-backend"
-          path: "backend"
+          project: "jerney-frontend"
+          path: "frontend"
           format: "HTML"
-          out: "dependency-check-reports-backend"
+          out: "dependency-check-reports-frontend"
           args: >
             --failOnCVSS 7
             --nvdApiKey ${{ secrets.NVD_API_KEY }}
@@ -92,8 +92,8 @@ jobs:
         uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: dependency-check-report-backend
-          path: ${{ github.workspace }}/dependency-check-reports-backend/
+          name: dependency-check-report-frontend
+          path: ${{ github.workspace }}/dependency-check-reports-frontend/
 
   code-quality-analysis:
     name: Sonarqube Code Quality Analysis
@@ -110,13 +110,13 @@ jobs:
       - name: Restore Cache Node Modules
         uses: actions/cache/restore@v5
         with:
-          path: backend/node_modules
-          key: node_modules-${{ hashFiles('backend/package.json') }}
+          path: frontend/node_modules
+          key: node_modules-${{ hashFiles('frontend/package.json') }}
 
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v7.1.0
         with:
-          projectBaseDir: backend
+          projectBaseDir: frontend
           args: >
             -Dsonar.organization=zohaibwarraich1
             -Dsonar.projectName=zohaibwarraich1_Jerney-real-time-blog-website
@@ -135,7 +135,7 @@ jobs:
         timeout-minutes: 10
         with:
           pollingTimeoutSec: 600
-          scanMetadataReportFile: backend/.scannerwork/report-task.txt
+          scanMetadataReportFile: frontend/.scannerwork/report-task.txt
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
@@ -157,18 +157,18 @@ jobs:
       - name: Build Image
         uses: docker/build-push-action@v7
         with:
-          context: ./backend/
-          file: ./backend/Dockerfile
+          context: ./frontend/
+          file: ./frontend/Dockerfile
           push: false
           load: true # build image and save to local docker daemon. So that it can be used for trivy scan.
-          tags: jerney-backend:local
+          tags: jerney-frontend:local
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@v0.35.0
         with:
-          image-ref: jerney-backend:local
+          image-ref: jerney-frontend:local
           format: "sarif"
-          output: "backend-trivy-results.sarif"
+          output: "frontend-trivy-results.sarif"
           exit-code: "0"
           ignore-unfixed: true
           scan-type: "image"
@@ -178,7 +178,7 @@ jobs:
         uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
-          sarif_file: 'backend-trivy-results.sarif'
+          sarif_file: 'frontend-trivy-results.sarif'
 
   docker-push:
     name: Push Docker Image
@@ -199,8 +199,8 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v7
         with:
-          context: ./backend/
-          file: ./backend/Dockerfile
+          context: ./frontend/
+          file: ./frontend/Dockerfile
           push: true
           tags: ${{ env.DOCKER_IMAGE }}:${{ needs.setup.outputs.image_tag }}
 
@@ -225,11 +225,11 @@ jobs:
 
           # Update Deployment Manifest
           sed -i "s|image: ${{ env.DOCKER_IMAGE }}:.*|image: ${{ env.DOCKER_IMAGE }}:${IMAGE_TAG}|g" \
-            k8s/backend/deployment.yaml
+            k8s/frontend/deployment.yaml
 
-          sed -i "/repository: zohaibwarraich\/jerney-backend/{n;s/tag: .*/tag: \"${IMAGE_TAG}\"/;}" \
+          sed -i "/repository: zohaibwarraich\/jerney-frontend/{n;s/tag: .*/tag: \"${IMAGE_TAG}\"/;}" \
             helm/values.yaml
 
-          git add k8s/backend/deployment.yaml helm/values.yaml
-          git commit -m "Update backend image tag to ${IMAGE_TAG} in helm values.yaml and k8s manifests [skip ci]" || echo "No changes to commit"
+          git add k8s/frontend/deployment.yaml helm/values.yaml
+          git commit -m "Update frontend image tag to ${IMAGE_TAG} in helm values.yaml and k8s manifests [skip ci]" || echo "No changes to commit"
           git push

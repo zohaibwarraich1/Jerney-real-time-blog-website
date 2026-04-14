@@ -30,7 +30,7 @@ function CreatePost() {
         author: author.trim() || 'Anonymous',
         emoji,
       });
-      toast.success('Post created! You ate that 🔥');
+      toast.success('Post created!. You ate that 🔥');
       navigate(`/post/${res.data.id}`);
     } catch (err) {
       toast.error('Failed to create post 😢');
