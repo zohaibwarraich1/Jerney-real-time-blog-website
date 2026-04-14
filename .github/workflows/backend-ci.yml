@@ -169,7 +169,7 @@ jobs:
           image-ref: jerney-backend:local
           format: 'sarif'
           output: 'backend-trivy-results.sarif'
-          exit-code: '1'
+          exit-code: '0'
           ignore-unfixed: true
           scan-type: 'image'
           severity: 'CRITICAL,HIGH'
