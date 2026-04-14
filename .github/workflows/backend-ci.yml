@@ -83,8 +83,8 @@ jobs:
           project: "jerney-backend"
           path: "backend"
           format: "HTML"
+          out: "dependency-check-reports"
           args: >
-            --out dependency-check-reports
             --failOnCVSS 7
             --nvdApiKey ${{ secrets.NVD_API_KEY }}
 
@@ -174,11 +174,12 @@ jobs:
           scan-type: 'image'
           severity: 'CRITICAL,HIGH'
 
-      - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v4
+      - name: Upload Trivy scan results
+        uses: actions/upload-artifact@v7
         if: always()
         with:
-          sarif_file: 'backend-trivy-results.sarif'
+          name: trivy-results
+          path: backend-trivy-results.sarif
           
   docker-push:
     name: Push Docker Image
