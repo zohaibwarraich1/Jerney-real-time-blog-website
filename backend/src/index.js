@@ -26,7 +26,7 @@ async function start() {
   try {
     await db.initDB();
     app.listen(PORT, '0.0.0.0', () => {
-      console.log(`🚀 Jerneyyg backend running on port ${PORT}`);
+      console.log(`🚀 Jerney backend running on port ${PORT}`);
     });
   } catch (err) {
     console.error('Failed to start server:', err);
