@@ -131,7 +131,7 @@ backendDeployment:
       name: backend-container
       image:
         repository: zohaibwarraich/jerney-backend
-        tag: "v14-da730b1"
+        tag: "v15-2365beb"
         pullPolicy: Always
       ports:
         - name: tcp
