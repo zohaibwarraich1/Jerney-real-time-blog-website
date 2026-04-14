@@ -70,17 +70,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          java-version: "17"
-          distribution: "temurin"
-
-      - name: Verify Java
-        run: |
-          echo "JAVA_HOME=$JAVA_HOME"
-          java -version
-
       - name: Restore Cache Node Modules
         uses: actions/cache/restore@v5
         with:
@@ -128,8 +117,8 @@ jobs:
           projectBaseDir: backend
           args: >
             -Dsonar.organization=zohaibwarraich1
-            -Dsonar.projectName=Jerney-real-time-blog-website-Backend
-            -Dsonar.projectKey=Jerney-real-time-blog-website-Backend
+            -Dsonar.projectName=zohaibwarraich1_Jerney-real-time-blog-website
+            -Dsonar.projectKey=zohaibwarraich1_Jerney-real-time-blog-website
             -Dsonar.sources=src
             -Dsonar.exclusions=node_modules/**,dist/**,coverage/**
             -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
