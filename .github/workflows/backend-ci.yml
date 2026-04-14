@@ -88,13 +88,13 @@ jobs:
           key: node_modules-${{ hashFiles('backend/package.json') }}
 
       - name: Run OWASP Dependency Check
-        uses: dependency-check/Dependency-Check_Action@1.1.0
+        uses: dependency-check/Dependency-Check_Action@v3
         with:
           project: "jerney-backend"
           path: "backend"
           format: "HTML"
-          out: "dependency-check-reports"
           args: >
+            --out dependency-check-reports
             --failOnCVSS 7
             --nvdApiKey ${{ secrets.NVD_API_KEY }}
 
