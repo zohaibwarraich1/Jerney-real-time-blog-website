@@ -8,7 +8,7 @@ function PostCard({ post }) {
   return (
     <Link to={`/post/${post.id}`} className="post-card">
       <div className="post-card-header">
-        <div className="post-emoji">{post.emoji || '✨'}</div>
+        <div className="post-emoji">{post.emoji || '✨ '}</div>
         <div>
           <h2 className="post-card-title">{post.title}</h2>
           <div className="post-card-meta">
