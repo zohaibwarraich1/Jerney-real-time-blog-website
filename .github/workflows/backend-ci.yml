@@ -135,10 +135,10 @@ jobs:
       - name: SonarQube to GitHub Security Tab (SARIF)
         uses: vmvarela/sonarqube-sarif@v1.2.0
         with:
-          sonar_token: ${{ secrets.SONAR_TOKEN }}
-          sonar_host_url: https://sonarcloud.io
-          project_key: 'zohaibwarraich1_Jerney-real-time-blog-website'
-          output_file: 'sonarqube-results-backend.sarif'
+          sonar-token: ${{ secrets.SONAR_TOKEN }}
+          sonar-host-url: https://sonarcloud.io
+          project-key: 'zohaibwarraich1_Jerney-real-time-blog-website'
+          output-file: 'sonarqube-results-backend.sarif'
 
       - name: Upload SonarQube Results to GitHub Security Tab
         uses: github/codeql-action/upload-sarif@v4
