@@ -232,4 +232,10 @@ jobs:
 
           git add k8s/backend/deployment.yaml helm/values.yaml
           git commit -m "Update backend image tag to ${IMAGE_TAG} in helm values.yaml and k8s manifests [skip ci]" || echo "No changes to commit"
-          git push
+
+          # Retry push up to 3 times to handle race condition with frontend workflow
+          for i in 1 2 3; do
+            git pull --rebase origin main && git push && break
+            echo "Push attempt $i failed, retrying..."
+            sleep 5
+          done
