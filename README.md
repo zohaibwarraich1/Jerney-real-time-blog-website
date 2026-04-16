@@ -1,154 +1,101 @@
-# 🛤️ Jerney — Blog Platform
+# 🛤️ Jerney — Real-Time Blog Platform (DevSecOps Edition)
 
-A Gen-Z vibe blog platform built with a 3-tier architecture — React frontend, Node.js backend, and PostgreSQL database.
+A Gen-Z vibe blog platform initially built as a standard 3-tier web app, now fully transformed into a **production-grade, scalable, and secure microservices architecture** deployed on AWS EKS.
 
-![Tech Stack](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react)
-![Tech Stack](https://img.shields.io/badge/Node.js-20-339933?style=flat-square&logo=node.js)
-![Tech Stack](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=flat-square&logo=postgresql)
+This repository serves as a showcase of modern **DevSecOps practices**, **Infrastructure as Code (IaC)**, and **GitOps-driven Continuous Delivery**.
 
----
-
-> [!IMPORTANT]
-> **Looking for the full DevSecOps implementation?**
-> Switch to the [`devops`](../../tree/devops) branch for Docker, Kubernetes (EKS Auto Mode), Terraform, CI/CD with GitHub Actions, container security scanning, and more.
->
-> ```bash
-> git checkout devops
-> ```
+![Tech Stack](https://img.shields.io/badge/AWS-232F3E?style=for-the-badge&logo=amazon-aws&logoColor=white)
+![Tech Stack](https://img.shields.io/badge/Terraform-7B42BC?style=for-the-badge&logo=terraform&logoColor=white)
+![Tech Stack](https://img.shields.io/badge/Kubernetes-326CE5?style=for-the-badge&logo=kubernetes&logoColor=white)
+![Tech Stack](https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=github-actions&logoColor=white)
+![Tech Stack](https://img.shields.io/badge/ArgoCD-EF7B4D?style=for-the-badge&logo=argo&logoColor=white)
 
 ---
-
-## ✨ Features
-
-- 📝 Create blog posts with emoji vibes
-- ✏️ Edit your existing posts
-- 🗑️ Delete posts you're not feeling anymore
-- 💬 Comment on posts
-- 🎨 Gen-Z dark UI with glassmorphism and gradients
 
 ## 🏗️ Architecture
 
-```
-┌──────────────┐     ┌──────────────┐     ┌──────────────┐
-│   Frontend   │────▶│   Backend    │────▶│  PostgreSQL   │
-│   (React +   │◀────│  (Node.js +  │◀────│              │
-│    Nginx)    │     │   Express)   │     │              │
-│   Port 80    │     │  Port 5000   │     │  Port 5432   │
-└──────────────┘     └──────────────┘     └──────────────┘
-```
+![Infrastructure Architecture](./architecture.png)
 
-## 📁 Project Structure
+---
 
-```
+## 🚀 DevSecOps & Cloud Features
+
+### 1. Infrastructure as Code (Terraform) ☁️
+- **AWS VPC:** Custom network across 3 AZs with Public/Private subnets and NAT Gateways.
+- **EKS Auto Mode:** Fully managed Kubernetes v1.35 cluster with 8 essential addons (CoreDNS, EBS CSI, VPC CNI, cert-manager, metrics-server).
+- **RDS PostgreSQL 16:** Multi-AZ deployment, encrypted at rest, auto-scaling storage.
+- **CDN & DNS:** CloudFront CDN caching with Route53 DNS and ACM-validated SSL certificates. `/api/*` paths bypass cache for real-time reads.
+
+### 2. Continuous Integration & Security (GitHub Actions) 🔄
+Multi-stage, path-filtered CI pipelines for both Frontend and Backend, featuring:
+- **Build & Test:** Multi-stage Docker builds minimizing image footprints (Alpine base).
+- **Security Gates:**
+  - **OWASP Dependency Check:** Fails build on High/Critical vulnerabilities (CVSS ≥ 7).
+  - **SonarQube:** Enforces code quality gates with hard timeouts.
+  - **Trivy Image Scanning:** Scans container images and automatically uploads SARIF reports directly to the **GitHub Security Tab**.
+- **Automated Manifest Updates:** Secure, concurrent Git push logic with race-condition retries to update `helm/values.yaml` with the latest Docker image tags.
+
+### 3. GitOps Continuous Delivery (Argo CD) 🐙
+- **Single Source of Truth:** Argo CD continuously monitors the `helm/` directory in this repository.
+- **Automated Sync & Self-Healing:** Instantly detects configuration drift and auto-heals cluster resources back to the desired Git state.
+- **Dynamic Configuration:** Database hosts, IRSA roles, and VPC CIDRs are dynamically injected from Terraform into Argo CD via Helm parameters.
+
+### 4. Production-Grade Kubernetes & Security ⎈
+- **Gateway API:** Utilizing NGINX Gateway Fabric with `HTTPRoutes` for advanced path-based routing (e.g., `/api` to backend, `/` to frontend) and TLS termination.
+- **Zero-Trust Secrets (IRSA):** External Secrets Operator (ESO) fetches secure credentials directly from AWS Secrets Manager using OIDC identity. No static credentials exist in the cluster.
+- **Container Hardening:** 100% of pods run in restricted security contexts:
+  - `runAsNonRoot: true` (UIDs 1000/101)
+  - `readOnlyRootFilesystem: true`
+  - `allowPrivilegeEscalation: false`
+- **Network Isolation:** Strict `NetworkPolicies` control all Ingress/Egress traffic between services and restrict backend outbound traffic strictly to RDS.
+- **Auto-Scaling (HPA):** Horizontal Pod Autoscalers dynamically scale frontend (2-5 pods) and backend (2-10 pods) based on CPU utilization thresholds.
+
+---
+
+## 📁 Repository Structure
+
+```text
 Jerney/
-├── frontend/                # React (Vite) frontend
-│   ├── src/                 # React components & pages
-│   ├── nginx.conf           # Nginx config for serving the app
-│   └── package.json
-├── backend/                 # Node.js Express API
-│   ├── src/                 # Routes, DB connection
-│   └── package.json
-├── deploy/                  # EC2 deployment scripts
-│   ├── setup.sh             # One-click EC2 setup script
-│   └── jerney-nginx.conf    # Nginx reverse proxy config
+├── .github/workflows/       # GitHub Actions CI pipelines (frontend-ci.yml, backend-ci.yml)
+├── argocd/                  # Argo CD GitOps Application manifest
+├── backend/                 # Node.js Express API source code + Dockerfile
+├── frontend/                # React (Vite) frontend source code + Dockerfile
+├── helm/                    # Kubernetes Helm charts (Infrastructure, Frontend, Backend)
+├── terraform/               # AWS Infrastructure as Code (VPC, EKS, RDS, S3 State)
 └── README.md
 ```
 
 ---
 
-## 🚀 Deploy on AWS EC2
+## 🧑‍💻 Local Development
 
 ### Prerequisites
-
-- An AWS EC2 instance running **Ubuntu 22.04+**
-- Security Group allowing inbound traffic on ports **22** (SSH) and **80** (HTTP)
-- SSH access to the instance
-
-### Step 1: Transfer the Code to EC2
-
-```bash
-# From your local machine
-scp -r -i your-key.pem ./Jerney ubuntu@<EC2_PUBLIC_IP>:~/Jerney
-```
-
-### Step 2: SSH into the Instance
-
-```bash
-ssh -i your-key.pem ubuntu@<EC2_PUBLIC_IP>
-```
-
-### Step 3: Run the Setup Script
-
-The `deploy/setup.sh` script installs everything and configures the app automatically:
-
-```bash
-cd ~/Jerney
-chmod +x deploy/setup.sh
-./deploy/setup.sh
-```
-
-This script will:
-1. Update system packages
-2. Install **Node.js 20.x**, **PostgreSQL 16**, **Nginx**, and **PM2**
-3. Create the database and user
-4. Install backend dependencies
-5. Build the React frontend
-6. Configure Nginx as a reverse proxy
-7. Start the backend with PM2 (auto-restarts on crash/reboot)
-
-### Step 4: Access the App
-
-Open your browser and go to:
-
-```
-http://<EC2_PUBLIC_IP>
-```
-
-### Useful Commands
-
-```bash
-pm2 status                          # Check backend status
-pm2 logs                            # View backend logs
-pm2 restart all                     # Restart backend
-sudo systemctl restart nginx        # Restart Nginx
-sudo -u postgres psql -d jerney_db  # Connect to database
-```
-
----
-
-## 🧑‍💻 Local Development (Without Docker)
-
-### Prerequisites
-
 - Node.js 20+
 - PostgreSQL 16+
 
-### Backend
-
+### Backend Setup
 ```bash
 cd backend
 npm install
 
-# Create a .env file (or export these variables)
+# Create a .env file
 export DB_HOST=localhost
 export DB_PORT=5432
 export DB_USER=jerney_user
-export DB_PASSWORD=jerney_pass_2026
+export DB_PASSWORD=jerney_pass
 export DB_NAME=jerney_db
 export PORT=5000
 
 npm start
 ```
 
-### Frontend
-
+### Frontend Setup
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
-
-The Vite dev server starts on `http://localhost:3000` and proxies `/api` requests to the backend at `http://localhost:5000`.
+*The Vite dev server starts on `http://localhost:3000` and proxies `/api` requests to the backend.*
 
 ---
 
@@ -156,25 +103,12 @@ The Vite dev server starts on `http://localhost:3000` and proxies `/api` request
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/health` | Health check |
-| GET | `/api/posts` | Get all posts |
-| GET | `/api/posts/:id` | Get single post with comments |
-| POST | `/api/posts` | Create a new post |
-| PUT | `/api/posts/:id` | Update a post |
-| DELETE | `/api/posts/:id` | Delete a post |
-| GET | `/api/comments/post/:postId` | Get comments for a post |
-| POST | `/api/comments` | Create a comment |
-| DELETE | `/api/comments/:id` | Delete a comment |
+| GET | `/api/health` | Service health check & readiness probe target |
+| GET | `/api/posts` | Retrieve paginated posts |
+| POST | `/api/posts` | Create a new blog post |
+| GET | `/api/comments/post/:postId` | Fetch post comments |
+| POST | `/api/comments` | Submit a comment |
 
 ---
 
-## 🌿 Branch Strategy
-
-| Branch | Purpose |
-|--------|---------|
-| `main` | Source code + EC2 bare-metal deployment |
-| `devops` | Full DevSecOps — Docker, Kubernetes (EKS), Terraform, CI/CD pipeline, security scanning |
-
----
-
-Built with 💜 by the Jerney team. No cap, this blog platform hits different. 🛤️
+Built to demonstrate the power of **DevSecOps** and **Cloud-Native Automation**. 🚀
