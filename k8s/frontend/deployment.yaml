@@ -27,7 +27,7 @@ spec:
         runAsUser: 101 # nginx user in alpine is 101
       containers:
         - name: frontend-container
-          image: zohaibwarraich/jerney-frontend:v2-980cbb5
+          image: zohaibwarraich/jerney-frontend:v4-91cb9f3
           imagePullPolicy: Always
           ports:
             - name: http

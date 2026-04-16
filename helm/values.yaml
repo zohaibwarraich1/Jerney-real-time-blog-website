@@ -15,7 +15,7 @@ frontendDeployment:
       runAsUser: 101 # default user for nginx that is named as nginx
     image:
       repository: zohaibwarraich/jerney-frontend
-      tag: "v2-980cbb5"
+      tag: "v4-91cb9f3"
       pullPolicy: Always
     ports:
       - name: tcp
@@ -131,7 +131,7 @@ backendDeployment:
       name: backend-container
       image:
         repository: zohaibwarraich/jerney-backend
-        tag: "v16-421a7e4"
+        tag: "v19-a338cb8"
         pullPolicy: Always
       ports:
         - name: tcp

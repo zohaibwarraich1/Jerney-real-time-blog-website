@@ -66,6 +66,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: build_and_test
     environment: Production
+    permissions: 
+      security-events: write
 
     steps:
       - name: Checkout
@@ -82,24 +84,25 @@ jobs:
         with:
           project: "jerney-frontend"
           path: "frontend"
-          format: "HTML"
+          format: "SARIF"
           out: "dependency-check-reports-frontend"
           args: >
             --failOnCVSS 7
             --nvdApiKey ${{ secrets.NVD_API_KEY }}
 
-      - name: Upload Report
-        uses: actions/upload-artifact@v7
+      - name: Upload OWASP Reports to GitHub Security Tab
+        uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
-          name: dependency-check-report-frontend
-          path: ${{ github.workspace }}/dependency-check-reports-frontend/
+          sarif_file: ${{ github.workspace }}/dependency-check-reports-frontend/dependency-check-report.sarif
 
   code-quality-analysis:
     name: Sonarqube Code Quality Analysis
     runs-on: ubuntu-latest
     needs: build_and_test
     environment: Production
+    permissions: 
+      security-events: write
 
     steps:
       - name: Checkout
@@ -128,6 +131,20 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: https://sonarcloud.io
+
+      - name: SonarQube to GitHub Security Tab (SARIF)
+        uses: vmvarela/sonarqube-sarif@v1.2.0
+        with:
+          sonar-token: ${{ secrets.SONAR_TOKEN }}
+          sonar-host-url: https://sonarcloud.io
+          project-key: 'zohaibwarraich1_Jerney-real-time-blog-website'
+          output-file: sonarqube-results-frontend.sarif
+
+      - name: Upload SonarQube Results to GitHub Security Tab
+        uses: github/codeql-action/upload-sarif@v4
+        if: always()
+        with:
+          sarif_file: ${{ github.workspace }}/sonarqube-results-frontend.sarif
 
       - name: SonarQube Quality Gate check
         id: sonarqube-quality-gate-check
